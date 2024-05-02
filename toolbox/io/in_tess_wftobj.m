@@ -31,7 +31,7 @@ function TessMat = in_tess_wftobj(TessFile, FileType)
 % For more information type "brainstorm license" at command prompt.
 % =============================================================================@
 %
-% Authors: Yash Vakilna, 2024
+% Authors: Yash Shashank Vakilna, 2024
 %          Chinmay Chinara, 2024
 
 %% Set up the Import Options and import the data
