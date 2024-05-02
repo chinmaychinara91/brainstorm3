@@ -217,7 +217,27 @@ switch (FileFormat)
             T = sMri.Header.info.mat(1:3,4)' - 1;
             TessMat.Vertices = bst_bsxfun(@minus, TessMat.Vertices, T / 1000);            
         end
-        
+
+    case 'WFTOBJ'
+        % Read the OBJ file for the surface mesh structure
+        TessMat = in_tess_wftobj(TessFile, 'meshed');
+        % Convert the units of the mesh
+        TessMat = ft_convert_units(TessMat, 'mm');
+        % Localize the fiducials of the head surface
+        cfg = [];
+        cfg.method = 'headshape';
+        fiducials = ft_electrodeplacement(cfg, TessMat);
+        % Realign the mesh on the basis of the fiducials to CTF coordinates
+        cfg = [];
+        cfg.method        = 'fiducial';
+        cfg.coordsys      = 'ctf';
+        cfg.fiducial.nas  = fiducials.elecpos(1,:); %NAS
+        cfg.fiducial.lpa  = fiducials.elecpos(2,:); %LPA
+        cfg.fiducial.rpa  = fiducials.elecpos(3,:); %RPA
+        TessMat = ft_meshrealign(cfg, TessMat);
+        % Convert to Brainstorm format
+        TessMat = head_surface_conversion(TessMat);
+
     case 'MRI-MASK'
         [TessMat, Labels] = in_tess_mrimask(TessFile, 0, SelLabels);
         
