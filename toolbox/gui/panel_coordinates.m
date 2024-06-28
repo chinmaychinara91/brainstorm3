@@ -304,7 +304,7 @@ function SetSelectionState(isSelected)
         % Exit 3DViz figures from SelectingCorticalSpot mode
         for hFig = hFigures
             set(hFig, 'Pointer', 'arrow');
-            setappdata(hFig, 'isSelectingCoordinates', 0);      
+            setappdata(hFig, 'isSelectingCoordinates', 0);  
         end
     end
 end

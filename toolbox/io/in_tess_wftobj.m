@@ -107,7 +107,7 @@ textureIdx(allzeros, :) = [];
 utriIdx = unique(tri(:));
 remove  = setdiff((1:size(pos, 1))', utriIdx);
 if ~isempty(remove)
-  [pos, tri] = remove_vertices(pos, tri, remove);
+  [pos, tri] = tess_remove_vert(pos, tri, remove);
   if texture_per_vert
     % also remove the removed vertices from the texture
     texture(remove, :) = [];

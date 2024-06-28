@@ -222,21 +222,46 @@ switch (FileFormat)
         % Read the OBJ file for the surface mesh structure
         TessMat = in_tess_wftobj(TessFile, 'meshed');
         % Convert the units of the mesh
-        TessMat = ft_convert_units(TessMat, 'mm');
+        % TessMat = ft_convert_units(TessMat, 'mm');
+
         % Localize the fiducials of the head surface
-        cfg = [];
-        cfg.method = 'headshape';
-        fiducials = ft_electrodeplacement(cfg, TessMat);
+        % cfg = [];
+        % cfg.method = 'headshape';
+        % fiducials = ft_electrodeplacement(cfg, TessMat);
+
         % Realign the mesh on the basis of the fiducials to CTF coordinates
-        cfg = [];
-        cfg.method        = 'fiducial';
-        cfg.coordsys      = 'ctf';
-        cfg.fiducial.nas  = fiducials.elecpos(1,:); %NAS
-        cfg.fiducial.lpa  = fiducials.elecpos(2,:); %LPA
-        cfg.fiducial.rpa  = fiducials.elecpos(3,:); %RPA
-        TessMat = ft_meshrealign(cfg, TessMat);
+        % cfg = [];
+        % cfg.method        = 'fiducial';
+        % cfg.coordsys      = 'ctf';
+        % cfg.fiducial.nas  = fiducials.elecpos(1,:); %NAS
+        % cfg.fiducial.lpa  = fiducials.elecpos(2,:); %LPA
+        % cfg.fiducial.rpa  = fiducials.elecpos(3,:); %RPA
+        % TessMat = ft_meshrealign(cfg, TessMat);
+
+        % Compute the transformation
+        % sMRI.SCS.NAS = fiducials.elecpos(1,:); %NAS
+        % sMRI.SCS.LPA = fiducials.elecpos(2,:); %LPA
+        % sMRI.SCS.RPA = fiducials.elecpos(3,:); %RPA
+        % scsTransf = cs_compute(sMRI, 'scs');
+        % T = scsTransf.T ./ 1000; % mm => m
+        % R = scsTransf.R;
+        % Origin = scsTransf.Origin ./ 1000; %#ok<NASGU> % mm => m
+        % trans = [R, T];
+
         % Convert to Brainstorm format
         TessMat = head_surface_conversion(TessMat);
+        
+        % for i=1:length(TessMat.Vertices)
+        %     a = [TessMat.Vertices(i, :) 1]';
+        %     b = trans * a;
+        %     c = b';
+        %     TessMat.Vertices(i, :) = c;
+        % end
+        % 
+        % % deface mesh
+        % TessMat = mesh_deface(TessMat);
+        
+        isConvertScs = 0;
 
     case 'MRI-MASK'
         [TessMat, Labels] = in_tess_mrimask(TessFile, 0, SelLabels);
@@ -283,6 +308,7 @@ if isConvertScs
     if ~isempty(sMri) && isfield(sMri, 'SCS') && isfield(sMri.SCS, 'NAS') && ~isempty(sMri.SCS.NAS)
         for iTess = 1:length(TessMat)
             TessMat(iTess).Vertices = cs_convert(sMri, 'mri', 'scs', TessMat(iTess).Vertices);
+            TessMat(iTess).Vertices = TessMat(iTess).Vertices ./1000;
         end
     else
         disp(['IN_TESS> Warning: MRI is missing, or fiducials are not defined.' 10 ...

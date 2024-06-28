@@ -103,6 +103,7 @@ if ~isempty(DataFile) && file_exist(DataFile)
 end
 % Get DataFile type
 fileType = file_gettype(DataFile);
+disp(DataFile);
 % Load file
 switch(fileType)
     case 'data'

@@ -304,6 +304,9 @@ function [sSurf, iSurf] = LoadSurface(varargin)
         sSurf.Comment         = surfMat.Comment;
         sSurf.Faces           = double(surfMat.Faces);
         sSurf.Vertices        = double(surfMat.Vertices);
+        if isfield(surfMat, 'Color')
+            sSurf.Color       = double(surfMat.Color);
+        end
         sSurf.VertConn        = surfMat.VertConn;
         sSurf.VertNormals     = surfMat.VertNormals;
         [tmp, sSurf.VertArea] = tess_area(surfMat.Vertices, surfMat.Faces);
@@ -332,7 +335,7 @@ function [sSurf, iSurf] = LoadSurface(varargin)
         iSurf = length(GlobalData.Surface) + 1;
         % Save surface in memory
         GlobalData.Surface(iSurf) = sSurf;
-        
+                
     % Else, return the existing instance
     else
         sSurf = GlobalData.Surface(iSurf);
