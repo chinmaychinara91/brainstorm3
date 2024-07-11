@@ -249,7 +249,7 @@ switch (FileFormat)
         % trans = [R, T];
 
         % Convert to Brainstorm format
-        TessMat = head_surface_conversion(TessMat);
+        % TessMat = head_surface_conversion(TessMat);
         
         % for i=1:length(TessMat.Vertices)
         %     a = [TessMat.Vertices(i, :) 1]';
