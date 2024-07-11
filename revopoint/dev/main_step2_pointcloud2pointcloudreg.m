@@ -13,7 +13,8 @@ function [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(cente
     % convert 3D to 2D
     X1 = [];
     Y1 = [];
-    for i=1:length(ChannelRef)
+    [~,col] = size(ChannelRef);
+    for i=1:col
         [X,Y] = bst_project_2d(ChannelRef(i).Loc(1,:), ChannelRef(i).Loc(2,:), ChannelRef(i).Loc(3,:), '2dcap');
         X1 = [X1 X];
         Y1 = [Y1 Y];

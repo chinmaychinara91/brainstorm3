@@ -931,7 +931,7 @@ function DetectAutoEEGPts_Callback(h, ev)
     sSurf.Faces = TessInfo.hPatch.Faces;
     sSurf.Color = TessInfo.hPatch.FaceVertexCData;
 
-    %% for joshi
+    %% for joshi (to get head_surface in BST format)
     % head_surf.pos = sSurf.Vertices;
     % head_surf.tri = sSurf.Faces;
     % head_surf.color = sSurf.Color;
@@ -941,11 +941,11 @@ function DetectAutoEEGPts_Callback(h, ev)
     [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1_find_points_on_cap_and_sketch(sSurf, 'E:/Brainstorm/Cloned/brainstorm3/untitled_easycap_66.png');
     % save('head_surf_chris_256.mat','head_surf'); % with vertex, face, color, u, v
     % load('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_ANT_Waveguard_65.mat');
-    load('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_BrainProducts_ActiCap_66.mat');
+    ChannelMat = in_bst_channel('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_BrainProducts_ActiCap_66.mat');
     % load('E:/Brainstorm/Cloned/brainstorm3/channel_easycap_66.mat');
-    ChannelRef = Channel;
-    Digitize.ChannelLength = length(Channel);
-    [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap,ChannelRef, cap_img, sketch_img, head_surf, Digitize.Points.EEG);
+    [~, col] = size(ChannelMat.Channel);
+    Digitize.ChannelLength = col;
+    [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap,ChannelMat.Channel, cap_img, sketch_img, head_surf, Digitize.Points.EEG);
 
     for i= 1:length(sketch_points)
         pointCoord = sketch_points(i, :);
@@ -1425,7 +1425,7 @@ function CreateMontageMenu(jMenu)
     jMenu.addSeparator();
     gui_component('MenuItem', jMenu, [], 'Add EEG montage...', [], [], @(h,ev)bst_call(@AddMontage), []);
     gui_component('MenuItem', jMenu, [], 'Unload all montages', [], [], @(h,ev)bst_call(@UnloadAllMontages), []);
-    jMenu = gui_component('Menu', jMenu, [], 'Use default EEG cap', IconLoader.ICON_CHANNEL, [], []);
+    jMenu = gui_component('Menu', jMenu, [], 'Use default EEG cap', IconLoader.ICON_CHANNEL, [], [], 12);
 
     % === USE DEFAULT CHANNEL FILE ===
     % Get registered Brainstorm EEG defaults
@@ -1433,15 +1433,15 @@ function CreateMontageMenu(jMenu)
     if ~isempty(bstDefaults)
         % Add a directory per template block available
         for iDir = 1:length(bstDefaults)
-            jMenuDir = gui_component('Menu', jMenu, [], bstDefaults(iDir).name, IconLoader.ICON_FOLDER_CLOSE, [], []);
+            jMenuDir = gui_component('Menu', jMenu, [], bstDefaults(iDir).name, IconLoader.ICON_FOLDER_CLOSE, [], [], 12);
             isMni = strcmpi(bstDefaults(iDir).name, 'ICBM152');
             % Create subfolder for cap manufacturer
-            jMenuOther = gui_component('Menu', [], [], 'Generic', IconLoader.ICON_FOLDER_CLOSE, [], []);
-            jMenuAnt = gui_component('Menu', [], [], 'ANT', IconLoader.ICON_FOLDER_CLOSE, [], []);
-            jMenuBs  = gui_component('Menu', [], [], 'BioSemi', IconLoader.ICON_FOLDER_CLOSE, [], []);
-            jMenuBp  = gui_component('Menu', [], [], 'BrainProducts', IconLoader.ICON_FOLDER_CLOSE, [], []);
-            jMenuEgi = gui_component('Menu', [], [], 'EGI', IconLoader.ICON_FOLDER_CLOSE, [], []);
-            jMenuNs  = gui_component('Menu', [], [], 'NeuroScan', IconLoader.ICON_FOLDER_CLOSE, [], []);
+            jMenuOther = gui_component('Menu', [], [], 'Generic', IconLoader.ICON_FOLDER_CLOSE, [], [], 12);
+            jMenuAnt = gui_component('Menu', [], [], 'ANT', IconLoader.ICON_FOLDER_CLOSE, [], [], 12);
+            jMenuBs  = gui_component('Menu', [], [], 'BioSemi', IconLoader.ICON_FOLDER_CLOSE, [], [], 12);
+            jMenuBp  = gui_component('Menu', [], [], 'BrainProducts', IconLoader.ICON_FOLDER_CLOSE, [], [], 12);
+            jMenuEgi = gui_component('Menu', [], [], 'EGI', IconLoader.ICON_FOLDER_CLOSE, [], [], 12);
+            jMenuNs  = gui_component('Menu', [], [], 'NeuroScan', IconLoader.ICON_FOLDER_CLOSE, [], [], 12);
             % Add an item per Template available
             fList = bstDefaults(iDir).contents;
             % Sort in natural order
@@ -1472,7 +1472,7 @@ function CreateMontageMenu(jMenu)
                     jMenuType = jMenuOther;
                 end
                 % Create item
-                gui_component('MenuItem', jMenuType, [], fList(iFile).name, IconLoader.ICON_CHANNEL, [], fcnCallback);
+                gui_component('MenuItem', jMenuType, [], fList(iFile).name, IconLoader.ICON_CHANNEL, [], fcnCallback, 12);
             end
             % Add if not empty
             if (jMenuOther.getMenuComponentCount() > 0)
