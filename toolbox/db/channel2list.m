@@ -108,6 +108,8 @@ if ~isempty(ChannelMat)
     bst_set('DigitizeOptions', DigitizeOptions);
     % Reload Menu
     panel_digitize('CreateMontageMenu');
+    % Update List
+    panel_digitize('UpdateList');
 end
 %     % Output filename: same as input
 %     [fPath, fBase, fExt] = bst_fileparts(ChannelFile);
