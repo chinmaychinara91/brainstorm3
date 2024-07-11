@@ -215,7 +215,9 @@ switch (lower(action))
                     MriFile = sSubject.Anatomy(1).FileName;
                     hFig = view_mri_3d(MriFile, [], 0.3, []);
                     view_surface(filenameRelative, [], [], hFig, []);
-                elseif ~isempty(regexp(filenameRelative, 'mesh', 'match'))
+                elseif ~isempty(regexp(filenameRelative, 'mesh', 'match')) ||...
+                    ~isempty(regexp(filenameRelative, 'tex', 'match')) ||...
+                    ~isempty(regexp(filenameRelative, 'sub', 'match'))
                     sSurf = bst_memory('LoadSurface', filenameRelative);
                     view_surface_matrix(sSurf.Vertices, sSurf.Faces, [], sSurf.Color, [], [], filenameRelative);
                 else

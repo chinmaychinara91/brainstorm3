@@ -38,9 +38,9 @@ function [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(cente
     % axis equal;
     
     % will warp sketch to cap
-    %% This needs to be manually edited to match 4 corresponding points sketch and cap image 64 channel
+    %% This needs to be manually edited to match 4 corresponding points sketch and cap image 64/65 channel
     % https://www.ant-neuro.com/sites/default/files/images/waveguard_layout_064ch.png 
-    % order for 64: Oz, T8, Fpz, T7
+    % order for 64/65: Oz, T8, Fpz, T7
 
     % Fpz = centerssketch(find(cellfun(@(c)strcmpi(c, 'Fpz'), {ChannelRef.Name})),:);
     % T8 = centerssketch(find(cellfun(@(c)strcmpi(c, 'T8'), {ChannelRef.Name})),:);

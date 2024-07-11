@@ -46,8 +46,7 @@ function [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1
     vc_sq = 0*X;
     vc_sq(:) = griddata(head_surf.u(1:end),head_surf.v(1:end),grayness,X(:),Y(:),'linear');
     
-   
-    
+      
     % uncomment for white caps (66 easycap)
     vc_sq = imcomplement(vc_sq);
     
