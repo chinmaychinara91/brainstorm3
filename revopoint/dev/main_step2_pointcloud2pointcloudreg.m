@@ -1,5 +1,6 @@
 
-function [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap,ChannelRef, cap_img, sketch_img, head_surf, EegPoints)
+% function [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap,ChannelRef, cap_img, sketch_img, head_surf, EegPoints)
+function [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap, ChannelRef, cap_img, head_surf, EegPoints)
     % close all;clc;
     
     % load("centers_cap_sketch.mat");

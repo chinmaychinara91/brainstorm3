@@ -938,14 +938,16 @@ function DetectAutoEEGPts_Callback(h, ev)
     % save('head_surf_yash_256.mat', 'head_surf');
     
     % [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1_find_points_on_cap_and_sketch(sSurf, 'E:/Brainstorm/Cloned/brainstorm3/untitled_ant_65.jpg');
-    [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1_find_points_on_cap_and_sketch(sSurf, 'E:/Brainstorm/Cloned/brainstorm3/untitled_easycap_66.png');
+    % [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1_find_points_on_cap_and_sketch(sSurf, 'E:/Brainstorm/Cloned/brainstorm3/untitled_easycap_66.png');
+    [centerscap, cap_img, head_surf] = main_step1_find_points_on_cap_and_sketch(sSurf);
     % save('head_surf_chris_256.mat','head_surf'); % with vertex, face, color, u, v
     % load('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_ANT_Waveguard_65.mat');
     ChannelMat = in_bst_channel('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_BrainProducts_ActiCap_66.mat');
     % load('E:/Brainstorm/Cloned/brainstorm3/channel_easycap_66.mat');
     [~, col] = size(ChannelMat.Channel);
     Digitize.ChannelLength = col;
-    [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap,ChannelMat.Channel, cap_img, sketch_img, head_surf, Digitize.Points.EEG);
+    % [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap, ChannelMat.Channel, cap_img, sketch_img, head_surf, Digitize.Points.EEG);
+    [cap_points, sketch_points] = main_step2_pointcloud2pointcloudreg(centerscap, ChannelMat.Channel, cap_img, head_surf, Digitize.Points.EEG);
 
     for i= 1:length(sketch_points)
         pointCoord = sketch_points(i, :);

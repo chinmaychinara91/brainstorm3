@@ -1,19 +1,20 @@
 %AUM
 %Shree Ganeshaya Namaha
-function [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1_find_points_on_cap_and_sketch(head_surface, sketch_file)
+% function [centerscap, centerssketch, cap_img, sketch_img, head_surf] = main_step1_find_points_on_cap_and_sketch(head_surface, sketch_file)
+function [centerscap, cap_img, head_surf] = main_step1_find_points_on_cap_and_sketch(head_surface)
     % clc;close all;
     % restoredefaultpath;
     % addpath('/home/ajoshi/Projects/3Dscanner2Brainstorm');
     % load ../generated_structures/demo_structures/step_4/head_surface.mat
     % Displays channel layout of supported 64ch
-    [image, cmap] = imread(sketch_file);
+    % [image, cmap] = imread(sketch_file);
     % set(gcf, 'Visible', 'on');
     
     % figure;title('Sketch');
     % imshow(image, cmap);
     
-    se = strel('disk',3);
-    im2 = imerode(image,se);
+    % se = strel('disk',3);
+    % im2 = imerode(image,se);
     
     NPTS = 512;
     
@@ -26,7 +27,7 @@ function [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1
     % hs.figure = patch('Vertices', head_surf.vertices, 'Faces', head_surf.faces, 'FaceVertexCData', head_surf.vcolor, 'FaceColor', 'interp','edgecolor','none');
     % axis equal;axis off;axis tight;
     
-    n=sqrt(sum(head_surf.vcolor.^2,2));
+    % n=sqrt(sum(head_surf.vcolor.^2,2));
     %head_surf.vcolor = head_surf.vcolor./n;
     grayness = head_surf.vcolor*[1;1;1]/sqrt(3);
     
@@ -74,11 +75,11 @@ function [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1
     % imagesc(image);
     % axis equal;axis off;
     
-    imwrite(image,'sketch.png');
-    [centers, radii, metric] = imfindcircles(image,[1 155]);
-    centerssketch = centers; 
-    radiisketch = radii;
-    metricsketch = metric;
+    % imwrite(image,'sketch.png');
+    % [centers, radii, metric] = imfindcircles(image,[1 155]);
+    % centerssketch = centers; 
+    % radiisketch = radii;
+    % metricsketch = metric;
     
     % viscircles(centerssketch, radiisketch,'EdgeColor','b');
     
@@ -111,8 +112,8 @@ function [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1
         %     centers(i,:)=S(i).Centroid;
         % end
         
-        [centers, radii, metric] = imfindcircles(image,[1 155]);
-        centerssketch = centers; 
+        % [centers, radii, metric] = imfindcircles(image,[1 155]);
+        % centerssketch = centers; 
         % radiisketch = 10*ones(length(S),1);
         %metricsketch = metric;
         
@@ -123,11 +124,11 @@ function [centerscap,centerssketch, cap_img, sketch_img, head_surf] = main_step1
         % imagesc(vc_sq);
         % axis equal;axis off;
         
-        radiicap = 10*ones(size(radiicap));
+        % radiicap = 10*ones(size(radiicap));
         % viscircles(centerscap, radiicap,'EdgeColor','b');
         
         cap_img = vc_sq;
-        sketch_img = image;
+        % sketch_img = image;
         % save('centers_cap_sketch.mat','centerscap',"centerssketch", "cap_img","sketch_img");
         % 
         % save('head_surf.mat','head_surf');
