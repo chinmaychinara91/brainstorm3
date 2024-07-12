@@ -942,7 +942,14 @@ function DetectAutoEEGPts_Callback(h, ev)
     [centerscap, cap_img, head_surf] = main_step1_find_points_on_cap_and_sketch(sSurf);
     % save('head_surf_chris_256.mat','head_surf'); % with vertex, face, color, u, v
     % load('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_ANT_Waveguard_65.mat');
-    ChannelMat = in_bst_channel('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_BrainProducts_ActiCap_66.mat');
+    DigitizeOptions = bst_get('DigitizeOptions');
+    if isempty(DigitizeOptions.ChannelFile)
+        bst_error('EEG cap layout not selected. Go to EEG', 'Revopoint', 1);
+        return;
+    else
+        ChannelMat = in_bst_channel(DigitizeOptions.ChannelFile);
+    end
+    % ChannelMat = in_bst_channel('E:/Brainstorm/Cloned/brainstorm3/defaults/eeg/Colin27/channel_BrainProducts_ActiCap_66.mat');
     % load('E:/Brainstorm/Cloned/brainstorm3/channel_easycap_66.mat');
     [~, col] = size(ChannelMat.Channel);
     Digitize.ChannelLength = col;
@@ -1624,10 +1631,14 @@ function UnloadAllMontages()
                'Labels', [])];
     % Reset to "No EEG"
     DigitizeOptions.iMontage = 1;
+    % Reset the channel file
+    DigitizeOptions.ChannelFile = [];
     % Save Digitize options
     bst_set('DigitizeOptions', DigitizeOptions);
     % Reload menu bar
     CreateMontageMenu();
+    % Update List
+    UpdateList();
 end
 
 

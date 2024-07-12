@@ -70,6 +70,9 @@ if ischar(ChannelMat)
     % Load existing file
     ChannelFile = ChannelMat;
     ChannelMat = in_bst_channel(ChannelFile);
+    DigitizeOptions = bst_get('DigitizeOptions');
+    DigitizeOptions.ChannelFile = ChannelFile;
+    bst_set('DigitizeOptions', DigitizeOptions);
 else
     ChannelMat = [];
 end
