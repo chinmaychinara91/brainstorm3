@@ -76,34 +76,6 @@ if (nargin < 7) || isempty(SurfaceFile)
     SurfaceFile = [];
 end
 
-iDS  = [];
-iFig = [];
-NewFigure = 0;
-
-%% ===== GET INFORMATION =====
-% Get Subject that holds this surface
-[sSubject, iSubject, iSurface] = bst_get('SurfaceFile', SurfaceFile);
-% If this surface does not belong to any subject
-if isempty(iDS)
-    if isempty(sSubject)
-        % Check that the SurfaceFile really exist as an absolute file path
-        if ~file_exist(SurfaceFile)
-            bst_error(['File not found : "', SurfaceFile, '"'], 'Display surface');
-            return
-        end
-        % Create an empty DataSet
-        SubjectFile = '';
-        iDS = bst_memory('GetDataSetEmpty');
-    else
-        % Get GlobalData DataSet associated with subjectfile (create if does not exist)
-        SubjectFile = sSubject.FileName;
-        iDS = bst_memory('GetDataSetSubject', SubjectFile, 1);
-    end
-    iDS = iDS(1);
-else
-    SubjectFile = sSubject.FileName;
-end
-
 % ===== Create new 3DViz figure =====
 isProgress = ~bst_progress('isVisible');
 if isProgress
@@ -111,7 +83,8 @@ if isProgress
 end
 if isempty(hFig)
     % Create a new empty DataSet
-    % iDS = bst_memory('GetDataSetEmpty');
+    iDS = bst_memory('GetDataSetEmpty');
+    SubjectFile = ''; 
     % Prepare FigureId structure
     FigureId = db_template('FigureId');
     FigureId.Type     = '3DViz';
@@ -123,13 +96,23 @@ if isempty(hFig)
         bst_error('Cannot create figure', 'View surface', 0);
         return;
     end
+    iDS = iDS(1);
 else
-    [iDS, iFig] = bst_figures('GetFigure', hFig);
-    isNewFig = 0;
+    if ~isempty(SurfaceFile)
+        % Get Subject that holds this surface
+        [sSubject, iSubject, iSurface] = bst_get('SurfaceFile', SurfaceFile);
+        SubjectFile = sSubject.FileName;
+        iDS = bst_memory('GetDataSetSubject', SubjectFile, 1);
+    else
+        [iDS, iFig] = bst_figures('GetFigure', hFig);
+        isNewFig = 0;
+    end
 end
 
-% Set application data
-setappdata(hFig, 'SubjectFile',  SubjectFile);
+if ~isempty(SurfaceFile)
+    % Set application data
+    setappdata(hFig, 'SubjectFile',  SubjectFile);
+end
 
 % ===== Create a pseudo-surface =====
 % Surface type

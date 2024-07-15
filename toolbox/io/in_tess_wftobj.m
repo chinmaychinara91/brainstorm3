@@ -9,7 +9,7 @@ function TessMat = in_tess_wftobj(TessFile, FileType)
 %
 % OUTPUT:
 %     - TessMat:  Brainstorm tesselation structure with fields:
-%         |- Vertices : {[nVertices x 3] double}, in meters
+%         |- Vertices : {[nVertices x 3] double}, in millimeters
 %         |- Faces    : {[nFaces x 3] double}
 %         |- Color    : {[nColors x 3] double}, normalized between 0-1
 %         |- Comment  : {information string}
