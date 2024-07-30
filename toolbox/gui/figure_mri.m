@@ -84,7 +84,7 @@ function [hFig, Handles] = CreateFigure(FigureId) %#ok<DEFNU>
         'Renderer',      rendererName, ...
         'BusyAction',    'cancel', ...
         'Interruptible', 'off', ...
-        'CloseRequestFcn',         @(h,ev)ButtonCancel_Callback(h,ev), ...
+        'CloseRequestFcn',         @(h,ev)bst_figures('DeleteFigure',h,ev), ...
         'KeyPressFcn',             @FigureKeyPress_Callback, ...
         'WindowButtonDownFcn',     [], ...
         'WindowButtonMotionFcn',   [], ...
@@ -1061,9 +1061,9 @@ function DisplayFigurePopup(hFig)
             jItem = gui_component('MenuItem', jMenuElec, [], 'Set electrode position',  IconLoader.ICON_CHANNEL, [], @(h,ev)SetElectrodePosition(hFig));      
             jItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_MASK));
         elseif isequal(GlobalData.DataSet(iDS).Figure(iFig).Id.Modality, 'SEEG')
-            gui_component('MenuItem', jMenuElec, [], 'SEEG contacts', IconLoader.ICON_CHANNEL, [], @(h,ev)LoadElectrodes(hFig, GlobalData.DataSet(iDS).ChannelFile, 'SEEG'));
+            gui_component('MenuItem', jMenuElec, [], 'SEEG contacts', IconLoader.ICON_CHANNEL, [], @(h,ev)panel_ieeg('LoadElectrodes', hFig, GlobalData.DataSet(iDS).ChannelFile, 'SEEG'));
         elseif isequal(GlobalData.DataSet(iDS).Figure(iFig).Id.Modality, 'ECOG')
-            gui_component('MenuItem', jMenuElec, [], 'ECOG contacts', IconLoader.ICON_CHANNEL, [], @(h,ev)LoadElectrodes(hFig, GlobalData.DataSet(iDS).ChannelFile, 'ECOG'));
+            gui_component('MenuItem', jMenuElec, [], 'ECOG contacts', IconLoader.ICON_CHANNEL, [], @(h,ev)panel_ieeg('LoadElectrodes', hFig, GlobalData.DataSet(iDS).ChannelFile, 'ECOG'));
         end
     end
     
@@ -1098,6 +1098,13 @@ function DisplayFigurePopup(hFig)
             gui_component('MenuItem', jMenuSave, [], 'Time contact sheet: Coronal',  IconLoader.ICON_CONTACTSHEET, [], @(h,ev)view_contactsheet(hFig, 'time', 'y', DefaultOutputDir));
             gui_component('MenuItem', jMenuSave, [], 'Time contact sheet: Sagittal', IconLoader.ICON_CONTACTSHEET, [], @(h,ev)view_contactsheet(hFig, 'time', 'x', DefaultOutputDir));
             gui_component('MenuItem', jMenuSave, [], 'Time contact sheet: Axial',    IconLoader.ICON_CONTACTSHEET, [], @(h,ev)view_contactsheet(hFig, 'time', 'z', DefaultOutputDir));
+        end
+        if ~getappdata(hFig, 'isStaticFreq')
+            % Separator
+            jMenuSave.addSeparator();
+            gui_component('MenuItem', jMenuSave, [], 'Frequency contact sheet: Coronal',  IconLoader.ICON_CONTACTSHEET, [], @(h,ev)view_contactsheet(hFig, 'freq', 'y', DefaultOutputDir));
+            gui_component('MenuItem', jMenuSave, [], 'Frequency contact sheet: Sagittal', IconLoader.ICON_CONTACTSHEET, [], @(h,ev)view_contactsheet(hFig, 'freq', 'x', DefaultOutputDir));
+            gui_component('MenuItem', jMenuSave, [], 'Frequency contact sheet: Axial',    IconLoader.ICON_CONTACTSHEET, [], @(h,ev)view_contactsheet(hFig, 'freq', 'z', DefaultOutputDir));
         end
         jMenuSave.addSeparator();
         gui_component('MenuItem', jMenuSave, [], 'Volume contact sheet: Coronal',  IconLoader.ICON_CONTACTSHEET, [], @(h,ev)view_contactsheet(hFig, 'volume', 'y', DefaultOutputDir));
@@ -1958,42 +1965,6 @@ function [sMri,Handles] = LoadFiducial(sMri, Handles, FidCategory, FidName, FidC
         Handles.(PtHandleName) = PlotPoint(sMri, Handles, sMri.(FidCategory).(FidName), FidColor, 7, FidName);
     end
 end
-
-
-%% ===== LOAD ELECTRODES =====
-function LoadElectrodes(hFig, ChannelFile, Modality) %#ok<DEFNU>
-    global GlobalData;
-    % Get figure and dataset
-    [hFig,iFig,iDS] = bst_figures('GetFigure', hFig);
-    if isempty(iDS)
-        return;
-    end
-    % Check that the channel is not already defined
-    if ~isempty(GlobalData.DataSet(iDS).ChannelFile) && ~file_compare(GlobalData.DataSet(iDS).ChannelFile, ChannelFile)
-        error('There is already another channel file loaded for this MRI. Close the existing figures.');
-    end
-    % Load channel file in the dataset
-    bst_memory('LoadChannelFile', iDS, ChannelFile);
-    % If iEEG channels: load both SEEG and ECOG
-    if ismember(Modality, {'SEEG', 'ECOG', 'ECOG+SEEG'})
-        iChannels = channel_find(GlobalData.DataSet(iDS).Channel, 'SEEG, ECOG');
-    else
-        iChannels = channel_find(GlobalData.DataSet(iDS).Channel, Modality);
-    end
-    % Set the list of selected sensors
-    GlobalData.DataSet(iDS).Figure(iFig).SelectedChannels = iChannels;
-    GlobalData.DataSet(iDS).Figure(iFig).Id.Modality      = Modality;
-    % Plot electrodes
-    if ~isempty(iChannels)
-        GlobalData.DataSet(iDS).Figure(iFig).Handles = PlotElectrodes(iDS, iFig, GlobalData.DataSet(iDS).Figure(iFig).Handles);
-        PlotSensors3D(iDS, iFig);
-    end
-    % Set EEG flag
-    SetFigureStatus(hFig, [], [], [], 1, 1);
-    % Update figure name
-    bst_figures('UpdateFigureName', hFig);
-end
-
 
 %% ===== PLOT 3D ELECTRODES =====
 function PlotSensors3D(iDS, iFig, Channel, ChanLoc)

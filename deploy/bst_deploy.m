@@ -36,7 +36,7 @@ function bst_deploy(GitDir, GitExe)
 
 %% ===== CONFIGURATION =====
 % Default GIT directory
-if ~ispc
+if ispc
     if (nargin < 1)
         GitDir = 'C:\Work\Dev\brainstorm_git\brainstorm3';
     end
@@ -234,8 +234,8 @@ function fContents = ReplaceBlock(fName, strStart, strStop, strNew)
         return;
     end
     iStop = iStop(1);
-    % If no change: exit
-    if strcmp(strNew, fContents(iStart:iStop-1))
+    % Exit if no change (ignore '\r' in line breaks)
+    if strcmp(strrep(strNew, char(13), ''), strrep(fContents(iStart:iStop-1), char(13), ''))
         return;
     end
     % Replace file block with new one
