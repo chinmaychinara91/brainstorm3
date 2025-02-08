@@ -390,7 +390,6 @@ function UpdatePanel()
     UpdateContactList('SCS');
 end
 
-
 %% ===== UPDATE ELECTRODE LIST =====
 function UpdateElecList()
     import org.brainstorm.list.*;
@@ -3145,22 +3144,7 @@ function CreateImplantation(MriFile) %#ok<DEFNU>
         end
         % Get CT from IsoSurf  % TODO do not assume there is only one IsoSurf
         if ~isempty(iSrf)
-            sSurf = load(file_fullpath(sSubject.Surface(iSrf).FileName), 'History');
-            if isfield(sSurf, 'History') && ~isempty(sSurf.History)
-                % Search for CT threshold in history
-                ctEntry = regexp(sSurf.History{1, 3}, '^Thresholded CT:\s(.*)\sthreshold.*$', 'tokens', 'once');
-                % Return intersection of the found and then update iCtVol
-                if ~isempty(ctEntry)
-                    [~, iCtIso] = ismember(ctEntry{1}, {sSubject.Anatomy.FileName});
-                    if iCtIso
-                        iCtVol = intersect(iCtIso, iCtVol);
-                    else
-                        bst_error(sprintf(['The CT that was used to create the IsoSurface cannot be found. ' 10 ...
-                                           'CT file : %s'], ctEntry{1}), 'Loading CT for IsoSurface');
-                        return
-                    end
-                end
-            end
+            iCtVol = GetIsosurfaceData(sSubject, iSrf);
         end
         if ~strcmpi(res, 'mri') && length(iCtVol) > 1
             % Prompt for the CT file selection
@@ -3328,6 +3312,41 @@ function [hFig, iDS, iFig] = DisplayIsosurface(sSubject, iSurface, hFig, Channel
     % SEEG and ECOG: Open tab "iEEG"
     if ismember(Modality, {'SEEG', 'ECOG', 'ECOG+SEEG'})
         gui_brainstorm('ShowToolTab', 'iEEG'); 
+    end
+end
+
+%% ===== FOR AN ISOSURFACE IN A SUBJECT, GET ITS ASSOCIATED CT VOLUME INDEX AND ISOVALUE
+% TODO: do not assume there is only one IsoSurface
+function [iCtVol, isoValue] = GetIsosurfaceData(sSubject, iIsoSurface)
+    % Intialize returned variables
+    iCtVol = [];
+    isoValue = [];
+    % Parse inputs
+    if (nargin < 2) 
+        bst_error('Usage: GetIsosurfaceData(sSubject, iIsoSurface)', 'Get associated CT index and isoValue for IsoSurface');
+        return;
+    end
+    
+    % Load the IsoSurface history
+    sSurf = load(file_fullpath(sSubject.Surface(iIsoSurface).FileName), 'History');
+    if isfield(sSurf, 'History') && ~isempty(sSurf.History)
+        % Get all the CT volumes for the subject
+        iCtVol = find(cellfun(@(x) ~isempty(regexp(x, '_volct', 'match')), {sSubject.Anatomy.FileName}));
+        % Search for CT threshold in history
+        ctEntry  = regexp(sSurf.History{1, 3}, '^Thresholded CT:\s(.*)\sthreshold.*$', 'tokens', 'once');
+        isoValue = regexp(sSurf.History{1, 3}, 'threshold\s*=\s*(\d+)', 'tokens', 'once');
+        isoValue = str2double(isoValue{1});
+        % Return intersection of the found and then update iCtVol
+        if ~isempty(ctEntry)
+            [~, iCtIso] = ismember(ctEntry{1}, {sSubject.Anatomy.FileName});
+            if iCtIso
+                iCtVol = intersect(iCtIso, iCtVol);
+            else
+                bst_error(sprintf(['The CT that was used to create the IsoSurface cannot be found. ' 10 ...
+                                   'CT file : %s'], ctEntry{1}), 'Loading CT for IsoSurface');
+                return
+            end
+        end
     end
 end
 
