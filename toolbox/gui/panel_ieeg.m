@@ -324,6 +324,11 @@ function bstPanelNew = CreatePanel() %#ok<DEFNU>
                 RemoveElectrode();
             case ev.VK_ESCAPE
                 SetSelectedElectrodes(0);
+            case {'G', 'g'}
+                sSelElec = GetSelectedElectrodes();
+                if (length(sSelElec) > 1)
+                    GroupElectrodes();
+                end
         end
     end
 
@@ -334,11 +339,10 @@ function bstPanelNew = CreatePanel() %#ok<DEFNU>
             % Rename selection
             EditElectrodeLabel();
         end
-
+        % If RIGHT CLICK
         if (ev.getButton() == 3)
-            % Get the selected electrode
+            % Popup
             sSelElec = GetSelectedElectrodes();
-            % Center MRI view on electrode tip
             if (length(sSelElec) > 1)
                 DisplayPanelPopup();
             end
