@@ -327,7 +327,7 @@ function bstPanelNew = CreatePanel() %#ok<DEFNU>
                 SetSelectedElectrodes(0);
             case 7 % CTRL+G
                 sSelElec = GetSelectedElectrodes();
-                if (length(sSelElec) > 1)
+                if ev.getModifiers == 2 && (length(sSelElec) > 1 && ~any(ismember({sSelElec.Type}, {'ECOG'})))
                     GroupElectrodes();
                 end
         end
@@ -360,7 +360,10 @@ function bstPanelNew = CreatePanel() %#ok<DEFNU>
         switch(uint8(ev.getKeyChar()))
             % DELETE
             case {ev.VK_DELETE, ev.VK_BACK_SPACE}
-                RemoveContact();
+                sSelElec = GetSelectedElectrodes();
+                if strcmpi(sSelElec(1).Type, 'SEEG')
+                    RemoveContact();
+                end
             case ev.VK_ESCAPE
                 SetSelectedContacts(0);
         end
@@ -422,7 +425,7 @@ function DisplayPanelPopup()
     sSelElec = GetSelectedElectrodes();            
     % Create popup menu
     jPopup = java_create('javax.swing.JPopupMenu');
-    if (length(sSelElec) > 1)
+    if (length(sSelElec) > 1 && ~any(ismember({sSelElec.Type}, {'ECOG'})))
         jGroupElec = gui_component('MenuItem', jPopup, [], 'Group electrodes', IconLoader.ICON_SEEG_DEPTH, [], @(h,ev)bst_call(@GroupElectrodes));
         jGroupElec.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, KeyEvent.CTRL_MASK));
     end
