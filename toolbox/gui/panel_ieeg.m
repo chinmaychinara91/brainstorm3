@@ -1582,12 +1582,12 @@ function AddContact()
     % Get crosshair location from figure
     XYZ = GetFigureLoc();
     if ~isempty(XYZ)
-        % sContacts = [];
         Channels = GlobalData.DataSet(iDSall(1)).Channel;
         % Get contacts for this electrode
         iChan = find(strcmpi({Channels.Group}, sSelElec.Name));
         sChannel = db_template('channeldesc');
-        sChannel.Name = sprintf('%s%d', sSelElec.Name, sSelElec.ContactNumber+1);
+        sContacts = GetContacts(sSelElec.Name);
+        sChannel.Name = sprintf('%s%d', sSelElec.Name, size(sContacts, 2)+1);
         sChannel.Type = 'SEEG';
         sChannel.Group = sSelElec.Name;       
         Channels = [Channels(1:iChan(end))'; sChannel; Channels(iChan(end)+1:end)'];
@@ -1603,21 +1603,21 @@ function AddContact()
         % Update intraelectrode structure in channel 
         sContactsOld = [GlobalData.DataSet(iDSall(1)).Channel(iChan).Loc];
         % Sort contacts (distance from origin)
-        sContacts = GetSortedContacts(sContactsOld);
+        sContactsLoc = GetSortedContacts(sContactsOld);
         % Update electrode contact number
-        sSelElec.ContactNumber = size(sContacts, 2);       
+        sSelElec.ContactNumber = size(sContactsLoc, 2);
         % Assign electrode tip and skull entry
         sSelElec.Loc = [];
         if sSelElec.ContactNumber >= 1
-            sSelElec.Loc(:,1) = sContacts(:, 1);
+            sSelElec.Loc(:,1) = sContactsLoc(:, 1);
         end
         if sSelElec.ContactNumber > 1
-            sSelElec.Loc(:,2) = sContacts(:, end);
+            sSelElec.Loc(:,2) = sContactsLoc(:, end);
         end
         % Set the changed electrode properties
         SetElectrodes(iSelElec, sSelElec);    
         % Align contacts
-        AlignContacts(iDSall, iFigall, 'auto', sSelElec, [], 1, 0, sContacts);
+        AlignContacts(iDSall, iFigall, 'auto', sSelElec, [], 1, 0, sContactsLoc);
     end
 end
 
