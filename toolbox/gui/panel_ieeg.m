@@ -1380,8 +1380,13 @@ end
 
 
 %% ===== ADD ELECTRODE =====
-function AddElectrode()
+function AddElectrode(varargin)
     global GlobalData;
+    if nargin<1
+        elecName = [];
+    else
+        elecName = varargin{1};
+    end
     % Get available electrodes
     [sAllElec, iDS, iFig] = GetElectrodes();
     % Get modality
@@ -1391,9 +1396,13 @@ function AddElectrode()
         Modality = 'SEEG';
     end
     % Ask user for a new label
-    newLabel = java_dialog('input', 'Electrode label:', 'Add electrode', [], '');
-    if isempty(newLabel)
-        return;
+    if isempty(elecName)
+        newLabel = java_dialog('input', 'Electrode label:', 'Add electrode', [], '');
+        if isempty(newLabel)
+            return;
+        end
+    else
+        newLabel = elecName;
     end
     % Check if label already exists
     if ~isempty(sAllElec) && any(strcmpi({sAllElec.Name}, newLabel))
