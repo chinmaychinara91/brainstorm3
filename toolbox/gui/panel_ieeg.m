@@ -54,7 +54,7 @@ function bstPanelNew = CreatePanel() %#ok<DEFNU>
         gui_component('ToolbarButton', jToolbar,[],[], {IconLoader.ICON_PLUS, TB_DIM}, 'Add new electrode', @(h,ev)bst_call(@AddElectrode));
         gui_component('ToolbarButton', jToolbar,[],[], {IconLoader.ICON_MINUS, TB_DIM}, 'Remove selected electrodes', @(h,ev)bst_call(@RemoveElectrode));
         % Button "Select vertex"
-        jButtonSelect = gui_component('ToolbarToggle', jToolbar, [], '', IconLoader.ICON_SCOUT_NEW, 'Select surface point', @(h,ev)ShowSurfSelectMenu(ev.getSource()), []);
+        jButtonSelect = gui_component('ToolbarToggle', jToolbar, [], '', IconLoader.ICON_SCOUT_NEW, 'Select surface point', @(h,ev)ShowSurfSelectMenu(ev.getSource()));
         % Set color
         jToolbar.addSeparator();
         gui_component('ToolbarButton', jToolbar,[],[], {IconLoader.ICON_COLOR_SELECTION, TB_DIM}, 'Select color for selected electrodes', @(h,ev)bst_call(@EditElectrodeColor));
@@ -1045,7 +1045,7 @@ function ShowContactsMenu(jButton)
         java_dialog('warning', 'No electrode selected.', 'Align contacts');
         return
     end
-    % Menu: Remove contacts
+    % Menu: Add/Remove contacts
     if strcmpi(sSelElec(1).Type, 'SEEG')
         gui_component('MenuItem', jMenu, [], 'Add new contact', IconLoader.ICON_PLUS, [], @(h,ev)bst_call(@AddContact));
         gui_component('MenuItem', jMenu, [], 'Remove selected contacts', IconLoader.ICON_MINUS, [], @(h,ev)bst_call(@RemoveContact));
