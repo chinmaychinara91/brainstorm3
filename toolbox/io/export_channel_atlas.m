@@ -1,8 +1,8 @@
-function TsvFile = export_channel_atlas(ChannelFile, Modality, TsvFile, Radius, isProba, isInteractive)
+function [TsvFile, ChanTable] = export_channel_atlas(ChannelFile, Modality, TsvFile, Radius, isProba, isInteractive)
 % EXPORT_CHANNEL_ATLAS: Compute anatomical labels for SEEG/ECOG contacts from volume and surface parcellations
 %
-% USAGE:  TsvFile = export_channel_atlas(ChannelFile, Modality='ECOG+SEEG', TsvFile=[ask], Radius=[ask], isProba=[ask], isInteractive=1)
-%         TsvFile = export_channel_atlas(ChannelFile, iChannels,            TsvFile=[ask], Radius=[ask], isProba=[ask], isInteractive=1)
+% USAGE:  [TsvFile, ChanTable] = export_channel_atlas(ChannelFile, Modality='ECOG+SEEG', TsvFile=[ask], Radius=[ask], isProba=[ask], isInteractive=1)
+%         [TsvFile, ChanTable] = export_channel_atlas(ChannelFile, iChannels,            TsvFile=[ask], Radius=[ask], isProba=[ask], isInteractive=1)
 %
 % INPUT: 
 %     - ChannelFile   : Path to Brainstorm channel file to be processed
@@ -15,6 +15,10 @@ function TsvFile = export_channel_atlas(ChannelFile, Modality, TsvFile, Radius, 
 %                       and do not display output table 
 %     - iChannels     : Limit export to a subset of channel indices
 % 
+% OUTPUT:
+%     - TsvFile       : Path to the exported .tsv file containing the channel information
+%     - ChanTable     : Cell array containing the exported channel information, including channel names, 
+%                       coordinates, atlas labels, and optional probability columns 
 % REFERENCES:
 %     - MERCIER M, 2021:
 %       "Because of the uncertainty on the 3D locations described above, we recommend to consider 
@@ -78,7 +82,7 @@ isSelect = [];
 
 
 % ===== SELECT OUTPUT FILE =====
-if isempty(TsvFile)
+if isempty(TsvFile) && isInteractive
     % Get default directories and formats
     LastUsedDirs = bst_get('LastUsedDirs');
     % Default output filename
