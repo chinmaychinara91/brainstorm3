@@ -40,58 +40,58 @@ end
 
 %% ===== GET DESCRIPTION =====
 function sProcess = GetDescription() %#ok<DEFNU>
-% Description the process
-sProcess.Comment     = 'Customize SPES (Nihon Kohden)';
-sProcess.Category    = 'Custom';
-sProcess.SubGroup    = 'Stimulation';
-sProcess.Index       = 901;
-% Definition of the input accepted by this process
-sProcess.InputTypes  = {'raw'};
-sProcess.OutputTypes = {'raw'};
-sProcess.nInputs     = 1;
-sProcess.nMinFiles   = 1;
-% Update stimulation start event label
-% If empty, the original Nihon Kohden label "Stim Start" is kept
-sProcess.options.stimstartlabel.Comment = 'Update stimulation start event label (empty=''Stim Start''): ';
-sProcess.options.stimstartlabel.Type    = 'text';
-sProcess.options.stimstartlabel.Value   = 'SB';
-% Update stimulation stop event label
-% If empty, the original Nihon Kohden label "Stim Stop" is kept
-sProcess.options.stimstoplabel.Comment = 'Update stimulation stop event label (empty=''Stim Stop''): ';
-sProcess.options.stimstoplabel.Type    = 'text';
-sProcess.options.stimstoplabel.Value   = 'SE';
-% Stimulation trigger channel name
-sProcess.options.stimchan.Comment = 'Stimulation trigger channel: ';
-sProcess.options.stimchan.Type    = 'text';
-sProcess.options.stimchan.Value   = 'DC10';
-% Update stimulation trigger label
-% If empty, the stimulation trigger channel name is used
-sProcess.options.stimlabel.Comment = 'Update stimulation trigger label (empty=No change): ';
-sProcess.options.stimlabel.Type    = 'text';
-sProcess.options.stimlabel.Value   = 'STIM';
-% Buffer time around stimulation block
-sProcess.options.label1.Comment = '<HTML><I><FONT color="#777777">Time window buffer for detecting the stimulation trigger</FONT></I>';
-sProcess.options.label1.Type    = 'label';
-sProcess.options.buffertime.Comment = 'Buffer time around stimulation block: ';
-sProcess.options.buffertime.Type    = 'value';
-sProcess.options.buffertime.Value   = {5,'s', 2};
-% Option: Trigger time offset
-sProcess.options.label2.Comment = ['<HTML><I><FONT color="#777777">' ...
-                                   'Add a fixed time offset to stimulation trigger event per block. It compensates for a known<BR>' ...
-                                   'stimulation delay/advance between the trigger and the actual stimulus presentation<BR>' ... 
-                                   'Example: Event occurs at 1.000s<BR>' ...
-                                   ' - Time offset =&nbsp;&nbsp;1.0ms => New timing of event will be 1.001s<BR>' ...
-                                   ' - Time offset = -1.0ms => New timing of event will be 0.999s</FONT></I>'];
-sProcess.options.label2.Type    = 'label';
-sProcess.options.offset.Comment = 'Trigger time offset:';
-sProcess.options.offset.Type    = 'value';
-sProcess.options.offset.Value   = {0, 'ms', []};
-% Add 'ODD' and 'EVEN' events to stimulation blocks
-sProcess.options.label3.Comment = '<HTML><I><FONT color="#777777">Add alternating monophasic stimulation trigger events</FONT></I>';
-sProcess.options.label3.Type    = 'label';
-sProcess.options.evtaddoddeven.Comment = 'Add ''ODD'' and ''EVEN'' events';
-sProcess.options.evtaddoddeven.Type    = 'checkbox';
-sProcess.options.evtaddoddeven.Value   = 1;
+    % Description the process
+    sProcess.Comment     = 'Customize SPES (Nihon Kohden)';
+    sProcess.Category    = 'Custom';
+    sProcess.SubGroup    = 'Stimulation';
+    sProcess.Index       = 901;
+    % Definition of the input accepted by this process
+    sProcess.InputTypes  = {'raw'};
+    sProcess.OutputTypes = {'raw'};
+    sProcess.nInputs     = 1;
+    sProcess.nMinFiles   = 1;
+    % Update stimulation start event label
+    % If empty, the original Nihon Kohden label "Stim Start" is kept
+    sProcess.options.stimstartlabel.Comment = 'Update stimulation start event label (empty=''Stim Start''): ';
+    sProcess.options.stimstartlabel.Type    = 'text';
+    sProcess.options.stimstartlabel.Value   = 'SB';
+    % Update stimulation stop event label
+    % If empty, the original Nihon Kohden label "Stim Stop" is kept
+    sProcess.options.stimstoplabel.Comment = 'Update stimulation stop event label (empty=''Stim Stop''): ';
+    sProcess.options.stimstoplabel.Type    = 'text';
+    sProcess.options.stimstoplabel.Value   = 'SE';
+    % Stimulation trigger channel name
+    sProcess.options.stimchan.Comment = 'Stimulation trigger channel: ';
+    sProcess.options.stimchan.Type    = 'text';
+    sProcess.options.stimchan.Value   = 'DC10';
+    % Update stimulation trigger label
+    % If empty, the stimulation trigger channel name is used
+    sProcess.options.stimlabel.Comment = 'Update stimulation trigger label (empty=No change): ';
+    sProcess.options.stimlabel.Type    = 'text';
+    sProcess.options.stimlabel.Value   = 'STIM';
+    % Buffer time around stimulation block
+    sProcess.options.label1.Comment = '<HTML><I><FONT color="#777777">Time window buffer for detecting the stimulation trigger</FONT></I>';
+    sProcess.options.label1.Type    = 'label';
+    sProcess.options.buffertime.Comment = 'Buffer time around stimulation block: ';
+    sProcess.options.buffertime.Type    = 'value';
+    sProcess.options.buffertime.Value   = {5,'s', 2};
+    % Option: Trigger time offset
+    sProcess.options.label2.Comment = ['<HTML><I><FONT color="#777777">' ...
+                                       'Add a fixed time offset to stimulation trigger event per block. It compensates for a known<BR>' ...
+                                       'stimulation delay/advance between the trigger and the actual stimulus presentation<BR>' ...
+                                       'Example: Event occurs at 1.000s<BR>' ...
+                                       ' - Time offset =&nbsp;&nbsp;1.0ms => New timing of event will be 1.001s<BR>' ...
+                                       ' - Time offset = -1.0ms => New timing of event will be 0.999s</FONT></I>'];
+    sProcess.options.label2.Type    = 'label';
+    sProcess.options.offset.Comment = 'Trigger time offset:';
+    sProcess.options.offset.Type    = 'value';
+    sProcess.options.offset.Value   = {0, 'ms', []};
+    % Add 'ODD' and 'EVEN' events to stimulation blocks
+    sProcess.options.label3.Comment = '<HTML><I><FONT color="#777777">Add alternating monophasic stimulation trigger events</FONT></I>';
+    sProcess.options.label3.Type    = 'label';
+    sProcess.options.evtaddoddeven.Comment = 'Add ''ODD'' and ''EVEN'' events';
+    sProcess.options.evtaddoddeven.Type    = 'checkbox';
+    sProcess.options.evtaddoddeven.Value   = 1;
 end
 
 %% ===== FORMAT COMMENT =====
