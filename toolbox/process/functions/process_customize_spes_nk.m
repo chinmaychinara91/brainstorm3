@@ -43,8 +43,9 @@ function sProcess = GetDescription() %#ok<DEFNU>
     % Description the process
     sProcess.Comment     = 'Customize SPES (Nihon Kohden)';
     sProcess.Category    = 'Custom';
-    sProcess.SubGroup    = 'Stimulation';
-    sProcess.Index       = 901;
+    sProcess.SubGroup    = 'Events';
+    sProcess.Index       = 60.1;
+    sProcess.isSeparator = 1;
     % Definition of the input accepted by this process
     sProcess.InputTypes  = {'raw'};
     sProcess.OutputTypes = {'raw'};
