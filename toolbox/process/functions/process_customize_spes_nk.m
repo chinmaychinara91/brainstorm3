@@ -118,11 +118,13 @@ function OutputFiles = Run(sProcess, sInputs) %#ok<DEFNU>
     isUpdateStimStartLabel = ~isempty(StimStartLabel);
     isUpdateStimStopLabel  = ~isempty(StimStopLabel);
     % Use the default Nihon Kohden labels when no custom labels are provided
+    defStimStartLabel = 'Stim Start';
     if ~isUpdateStimStartLabel
-        StimStartLabel = 'Stim Start';
+        StimStartLabel = defStimStartLabel;
     end
+    defStimStopLabel = 'Stim Stop';
     if ~isUpdateStimStopLabel
-        StimStopLabel = 'Stim Stop';
+        StimStopLabel = defStimStopLabel;
     end
     % If no custom stimulation trigger event label is provided, use the analog 
     % trigger channel name as the event label
@@ -131,11 +133,63 @@ function OutputFiles = Run(sProcess, sInputs) %#ok<DEFNU>
     end
     
     for iFile = 1:length(sInputs)
+        % Laod Events from file
+        isRaw = strcmpi(sInputs(iFile).FileType, 'raw');
+        if isRaw
+            DataMat = in_bst_data(sInputs(iFile).FileName, 'F', 'History');
+            sEvents = DataMat.F.events;
+        else
+            DataMat = in_bst_data(sInputs(iFile).FileName, 'Events', 'History');
+            sEvents = DataMat.Events;
+        end
+        if isempty(sEvents)
+            bst_report('Error', sProcess, sInput, 'This file does not contain any event.');
+            return
+        end
         % Locate Nihon Kohden stimulation block events
-        EventMat = in_bst_data(sInputs(iFile).FileName, 'F');
-        iStart = find(strncmp({EventMat.F.events.label}, 'Stim Start', 10));
-        iStop  = find(strncmp({EventMat.F.events.label}, 'Stim Stop', 9));
-        
+        iStarts = find(strncmp({sEvents.label}, defStimStartLabel, length(defStimStartLabel)));
+        iStops  = find(strncmp({sEvents.label}, defStimStopLabel,  length(defStimStopLabel)));
+        if isempty(iStarts) || isempty(iStops)
+            continue
+        end
+        % Start/Stop labels must be given in pairs, ignore single labels
+        stimStartLabels = {sEvents(iStarts).label};
+        stimStopLabels  = {sEvents(iStops).label};
+        % Find paired stimulation Start and Stop events, i.e., stimulation blocks
+        stimStartStopLabels = {};
+        stimStartStopIxs    = [];
+        stimStartStopTimes  = {};
+        % Event names without preffix
+        stimStartWoPreffixLabels = cellfun(@(x) strtrim(regexprep(x, ['^' defStimStartLabel], '')), stimStartLabels, 'UniformOutput', 0);
+        stimStopWoPreffixLabels =  cellfun(@(x) strtrim(regexprep(x, ['^' defStimStopLabel], '')), stimStopLabels, 'UniformOutput', 0);                       
+        for iA = 1 : length(stimStartWoPreffixLabels)
+            % Check for perfect match of labels
+            [isPerfectMatch, iB] = ismember(stimStartWoPreffixLabels{iA}, stimStopWoPreffixLabels);
+            if isPerfectMatch
+                stimStartStopLabels{end+1}  = stimStartWoPreffixLabels{iA};
+                stimStartStopIxs(end+1, 1)  = iStarts(iA);
+                stimStartStopIxs(end,   2)  = iStops(iB);
+                stimStartStopTimes{end+1,1} = sEvents(iStarts(iA)).times;
+                stimStartStopTimes{end  ,2} = sEvents(iStops(iB)).times;
+            % Check for partial check of labels (specific case where Start label was clipped at 20 chars: ['Stim Start', ' ', LABEL9CHR]
+            elseif length(stimStartWoPreffixLabels{iA}) == 9
+                iB = find(strncmp(stimStopWoPreffixLabels, stimStartWoPreffixLabels{iA}, length(stimStartWoPreffixLabels{iA})));
+                if length(iB) == 1
+                    stimStartStopLabels{end+1}  = stimStartWoPreffixLabels{iA};
+                    stimStartStopIxs(end+1, 1)  = iStarts(iA);
+                    stimStartStopIxs(end,   2)  = iStops(iB);
+                    stimStartStopTimes{end+1,1} = sEvents(iStarts(iA)).times;
+                    stimStartStopTimes{end  ,2} = sEvents(iStops(iB)).times;
+                end
+            else
+                % Ignore Start label as it does not have a related Stop label
+                continue
+            end
+        end
+        if isempty(stimStartStopIxs)
+            bst_report('Error', sProcess, sInput, 'This file does not contain pairs of Start-Stop events.');
+            return
+        end
         % If provided, rename stimulation block start events
         if isUpdateStimStartLabel
             srcTag = {EventMat.F.events(iStart).label};
