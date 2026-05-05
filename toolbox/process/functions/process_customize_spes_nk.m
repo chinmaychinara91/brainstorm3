@@ -192,28 +192,24 @@ function OutputFiles = Run(sProcess, sInputs) %#ok<DEFNU>
         end
         % If provided, rename stimulation block start events
         if isUpdateStimStartLabel
-            srcTag = {EventMat.F.events(iStart).label};
+            srcTag = {sEvents(stimStartStopIxs(:,1)).label};
             destTag = strrep(srcTag, 'Stim Start', StimStartLabel);
-            bst_process('CallProcess', 'process_evt_rename', sInputs(iFile), [], ...
-                    'src',  strjoin(srcTag, ', '), ...
-                    'dest', strjoin(destTag, ', '));
+            sEvents = process_evt_rename('Compute', sInputs(iFile).FileName, sEvents, srcTag, destTag);
         end
         % If provided, rename stimulation block stop events
         if isUpdateStimStopLabel
-            srcTag = {EventMat.F.events(iStop).label};
+            srcTag = {sEvents(stimStartStopIxs(:,2)).label};
             destTag = strrep(srcTag, 'Stim Stop', StimStopLabel);
-            bst_process('CallProcess', 'process_evt_rename', sInputs(iFile), [], ...
-                    'src',  strjoin(srcTag, ', '), ...
-                    'dest', strjoin(destTag, ', '));
+            sEvents = process_evt_rename('Compute', sInputs(iFile).FileName, sEvents, srcTag, destTag);
         end
-        
-        % Reload the event structure
-        EventMat = in_bst_data(sInputs(iFile).FileName, 'F');
-        % Extract event times
-        stimStartTimes = {EventMat.F.events(iStart).times};
-        stimStopTimes  = {EventMat.F.events(iStop).times};
-        % Extract start event labels
-        stimStartLabels = {EventMat.F.events(iStart).label};
+        % Report changes in .mat structure
+        if isRaw
+            DataMat.F.events = sEvents;
+        else
+            DataMat.Events = sEvents;
+        end
+        % Save file definition
+        bst_save(file_fullpath(sInputs(iFile).FileName), DataMat, 'v6', 1);
     
         % === Detect analog stimulation trigger pulses inside each stimulation block ===
         % Each start/stop pair defines a time window. Within that window, individual
