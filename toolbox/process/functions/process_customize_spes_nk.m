@@ -48,8 +48,8 @@ function sProcess = GetDescription() %#ok<DEFNU>
     sProcess.Index       = 60.1;
     sProcess.isSeparator = 1;
     % Definition of the input accepted by this process
-    sProcess.InputTypes  = {'raw'};
-    sProcess.OutputTypes = {'raw'};
+    sProcess.InputTypes  = {'data','raw'};
+    sProcess.OutputTypes = {'data','raw'};
     sProcess.nInputs     = 1;
     sProcess.nMinFiles   = 1;
     % Update stimulation start event label
