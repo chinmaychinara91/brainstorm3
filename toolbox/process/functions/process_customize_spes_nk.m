@@ -34,6 +34,7 @@ function varargout = process_customize_spes_nk( varargin )
 % Authors: Kenneth N. Taylor, 2020
 %          John C. Mosher, 2020          
 %          Chinmay Chinara, 2026
+%          Raymundo Cassani, 2026
 
 eval(macro_method);
 end
@@ -136,11 +137,15 @@ function OutputFiles = Run(sProcess, sInputs) %#ok<DEFNU>
         % Laod Events from file
         isRaw = strcmpi(sInputs(iFile).FileType, 'raw');
         if isRaw
-            DataMat = in_bst_data(sInputs(iFile).FileName, 'F', 'History');
+            DataMat = in_bst_data(sInputs(iFile).FileName, 'F', 'Time', 'History');
+            sFile   = DataMat.F;
             sEvents = DataMat.F.events;
+            sFreq   = DataMat.F.prop.sfreq;
         else
-            DataMat = in_bst_data(sInputs(iFile).FileName, 'Events', 'History');
+            DataMat = in_bst_data(sInputs(iFile).FileName, 'Events', 'Time', 'History');
             sEvents = DataMat.Events;
+            sFile = in_fopen(sInputs(iFile).FileName, 'BST-DATA');
+            sFreq = 1 ./ (DataMat.Time(2) - DataMat.Time(1));
         end
         if isempty(sEvents)
             bst_report('Error', sProcess, sInput, 'This file does not contain any event.');
@@ -202,78 +207,101 @@ function OutputFiles = Run(sProcess, sInputs) %#ok<DEFNU>
             destTag = strrep(srcTag, 'Stim Stop', StimStopLabel);
             sEvents = process_evt_rename('Compute', sInputs(iFile).FileName, sEvents, srcTag, destTag);
         end
-        % Report changes in .mat structure
+    
+        % === Detect analog stimulation trigger pulses inside each stimulation block ===
+        % Get index for stimulation trigger channel
+        ChannelMat = in_bst_channel(sInputs(iFile).ChannelFile);
+        iChannel = find(strcmpi({ChannelMat.Channel.Name}, StimChan));
+
+        % Each start/stop pair defines a time window. Within that window, individual
+        % trigger pulses are detected from the selected analog stimulation channel
+        for iStimStartStop = 1:length(stimStartStopLabels)
+            for iTime = 1:length(stimStartStopTimes{iStimStartStop, 1})
+                % Stimulation trigger event name. E.g. "STIM O6-O7 4.0 #1"
+                stimEventName = sprintf('%s %s #%d', StimLabel, stimStartStopLabels{iStimStartStop}, iTime);
+                % Define time window (stimulation block plus some context before and after it)
+                TimeWindow = [stimStartStopTimes{iStimStartStop, 1}(iTime) - BufferTime, stimStartStopTimes{iStimStartStop, 2}(iTime) + BufferTime];
+                SamplesBounds = round(sFile.prop.times(1) .* sFile.prop.sfreq) + bst_closest(TimeWindow, DataMat.Time) - 1;
+                % Option structure for function in_fread()
+                ImportOptions = db_template('ImportOptions');
+                ImportOptions.ImportMode      = 'Time';
+                ImportOptions.EventsMode      = 'ignore';
+                ImportOptions.DisplayMessages = 0;
+                % Read data (F) and time Vector to analyze
+                [F, TimeVector] = in_fread(sFile, ChannelMat, 1, SamplesBounds, iChannel, ImportOptions);
+                % Get mask to ignore bad segments in file
+                Fmask = [];
+                badSeg = process_evt_detect('GetBadSegments', sFile, TimeWindow, DataMat.Time, length(TimeVector));
+                if ~isempty(badSeg)
+                    % Create file mask
+                    Fmask = true(size(F));
+                    % Loop on each segment: mark as bad
+                    for iSeg = 1:size(badSeg, 2)
+                        Fmask(:, badSeg(1,iSeg):badSeg(2,iSeg)) = false;
+                    end
+                end
+                % Set import options
+                EvtDetectAnalogOptions = process_evt_detect_analog('Compute');
+                EvtDetectAnalogOptions.threshold = 1;
+                EvtDetectAnalogOptions.blanking = 0.8;
+                EvtDetectAnalogTimes = process_evt_detect_analog('Compute', F, TimeVector, [], EvtDetectAnalogOptions, Fmask);
+                % Create stim event struct
+                sEventStim = db_template('event');
+                sEventStim.label = stimEventName;
+                sEventStim.times = EvtDetectAnalogTimes{1};
+                sEventStim.epochs   = ones(1, size(sEventStim.times,2));
+                sEventStim.color = [0.8, 0.8, 0.8]; % Gray
+                % Add fixed time offset
+                if OffsetTime ~= 0
+                    sEventStim.times = round((sEventStim.times + OffsetTime) .* sFreq) ./ sFreq;
+                end
+                % Store stim event in sEvents
+                iEvt = find(strcmpi({sEvents.label}, sEventStim.label));
+                if isempty(iEvt)
+                    iEvt = length(sEvents) + 1;
+                end
+                sEvents(iEvt) = sEventStim;
+
+                % If provided, split detected pulses into 'ODD' and 'EVEN' events
+                if EvtAddOddEven
+                    % Create 'ODD' event from odd-numbered stimulation trigger pulses
+                    sEventOdd = db_template('event');
+                    sEventOdd.label  = sprintf('ODD %s #%d', stimStartStopLabels{iStimStartStop}, iTime);
+                    sEventOdd.times = sEventStim.times(1:2:end);
+                    sEventOdd.epochs = sEventStim.epochs(1:2:end);
+                    sEventOdd.color = [0.9, 0, 0]; % Red
+                    % Store odd stim events in sEvents
+                    iEvt = find(strcmpi({sEvents.label}, sEventOdd.label));
+                    if isempty(iEvt)
+                        iEvt = length(sEvents) + 1;
+                    end
+                    sEvents(iEvt) = sEventOdd;
+                    % Create 'EVEN' event from even-numbered stimulation trigger pulses
+                    sEventEven = db_template('event');
+                    sEventEven.label  = sprintf('EVEN %s #%d', stimStartStopLabels{iStimStartStop}, iTime);
+                    sEventEven.times = sEventStim.times(2:2:end);
+                    sEventEven.epochs = sEventStim.epochs(2:2:end);
+                    sEventEven.color = [ 0, 0, 0.9]; % Blue
+                    % Store even stim events in sEvents
+                    iEvt = find(strcmpi({sEvents.label}, sEventEven.label));
+                    if isempty(iEvt)
+                        iEvt = length(sEvents) + 1;
+                    end
+                    sEvents(iEvt) = sEventEven;
+                end
+            end
+        end
+
+        % Save events
         if isRaw
             DataMat.F.events = sEvents;
         else
             DataMat.Events = sEvents;
         end
-        % Save file definition
-        bst_save(file_fullpath(sInputs(iFile).FileName), DataMat, 'v6', 1);
-    
-        % === Detect analog stimulation trigger pulses inside each stimulation block ===
-        % Each start/stop pair defines a time window. Within that window, individual
-        % trigger pulses are detected from the selected analog stimulation channel
-        for iLabel = 1:length(stimStartLabels)
-            % Extract stimulation site information
-            % Example: "SB O6-O7 4.0" -> "O6-O7 4.0"
-            stimSiteInfo = strtrim(strrep(stimStartLabels{iLabel}, StimStartLabel, ''));
-            
-            for iTime = 1:length(stimStartTimes{iLabel})
-                % Stimulation trigger event name
-                % Example: "STIM O6-O7 4.0 #1"
-                stimEventName = sprintf('%s %s #%d', StimLabel, stimSiteInfo, iTime);
-                % Define time window (stimulation block plus some context before and after it) 
-                preStim = stimStartTimes{iLabel}(iTime) - BufferTime;
-                postStim = stimStopTimes{iLabel}(iTime) + BufferTime;
-                % Detect individual analog trigger pulses within the current stimulation block
-                bst_process('CallProcess', 'process_evt_detect_analog', sInputs(iFile).FileName, [], ...
-                        'eventname',   stimEventName, ...
-                        'timewindow',  [preStim postStim], ...
-                        'channelname', StimChan, ...
-                        'threshold',   1, ...        % Standard deviations from noise 
-                        'blanking',    0.8, ...      % Minimum duration between two events (in seconds)
-                        'highpass',    0, ...
-                        'lowpass',     0, ...
-                        'refevent',    '', ...
-                        'isfalling',   0, ...
-                        'ispullup',    0, ...        % No DC offset removal
-                        'isclassify',  0);
-                
-                % Process: Add fixed time offset
-                if OffsetTime ~= 0
-                    bst_process('CallProcess', 'process_evt_timeoffset', sInputs(iFile), [], ...
-                        'info',      [], ...
-                        'eventname', stimEventName, ...
-                        'offset',    OffsetTime);   % in ms
-                end
-                
-                % If provided, split detected pulses into 'ODD' and 'EVEN' events
-                if EvtAddOddEven
-                    % Reload the event structure
-                    EventMat = in_bst_data(sInputs(iFile).FileName, 'F');
-                    % Update color for the stimulation trigger event
-                    EventMat.F.events(end).color = [0.8, 0.8, 0.8]; % Gray
-                    % Create 'ODD' event from odd-numbered stimulation trigger pulses
-                    sEventOdd = db_template('event');
-                    sEventOdd.label  = sprintf('ODD %s #%d', stimSiteInfo, iTime);
-                    sEventOdd.times = EventMat.F.events(end).times(1:2:end);
-                    sEventOdd.epochs = EventMat.F.events(end).epochs(1:2:end);
-                    sEventOdd.color = [0.9, 0, 0]; % Red
-                    EventMat.F.events(end+1) = sEventOdd;
-                    % Create 'EVEN' event from even-numbered stimulation trigger pulses
-                    sEventEven = db_template('event');
-                    sEventEven.label  = sprintf('EVEN %s #%d', stimSiteInfo, iTime);
-                    sEventEven.times = EventMat.F.events(end-1).times(2:2:end);
-                    sEventEven.epochs = EventMat.F.events(end-1).epochs(2:2:end);
-                    sEventEven.color = [ 0, 0, 0.9]; % Blue
-                    EventMat.F.events(end+1) = sEventEven;            
-                    % Save the updated event structure back to the raw file
-                    bst_save(file_fullpath(sInputs(iFile).FileName), EventMat, 'v7', 1);
-                end
-            end
-        end
-
+        % Add history entry
+        DataMat = bst_history('add', DataMat, 'NK', ['DESCRIPTION']);
+        % Only save changes if something was change
+        bst_save(file_fullpath(sInputs(iFile).FileName), DataMat, [], 1);
         % Return the processed raw file
         OutputFiles{end+1} = sInputs(iFile).FileName;
     end
